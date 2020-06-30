@@ -2,8 +2,8 @@
 # The original code has been altered to implement the semi-supervised version of
 # Naive Bayes described in Section 5.3.1 of the following paper:
 
-# K. Nigam, A.K. McCallum, S. Thrun, T. Mitchell (2000). Text classification 
-# from labeled and unlabeled documents using EM. Machine learning 39(2-3), 
+# K. Nigam, A.K. McCallum, S. Thrun, T. Mitchell (2000). Text classification
+# from labeled and unlabeled documents using EM. Machine learning 39(2-3),
 # pp. 103-134.
 
 #
@@ -29,9 +29,9 @@ from sklearn.utils.validation import check_is_fitted
 
 class MultinomialNBSS(_BaseDiscreteNB):
     """
-    Semi-supervised Naive Bayes classifier for multinomial models.  Unlabeled 
-    data must be marked with -1.  In comparison to the standard scikit-learn 
-    MultinomialNB classifier, the main differences are in the _count and fit 
+    Semi-supervised Naive Bayes classifier for multinomial models.  Unlabeled
+    data must be marked with -1.  In comparison to the standard scikit-learn
+    MultinomialNB classifier, the main differences are in the _count and fit
     methods.
 
     Parameters
@@ -52,13 +52,22 @@ class MultinomialNBSS(_BaseDiscreteNB):
         Prior probabilities of the classes. If specified the priors are not
         adjusted according to the data.
 
+    tol : float, optional (default=1e-3)
+        Tolerance for convergence of EM algorithm.
+
+    max_iter : int, optional (default=20)
+        Maximum number of iterations for EM algorithm.
+
+    verbose : boolean, optional (default=True)
+        Whether to ouput updates during the running of the EM algorithm.
+
     Attributes
     ----------
     class_log_prior_ : array, shape (n_classes, )
         Smoothed empirical log probability for each class.
 
     intercept_ : array, shape (n_classes, )
-        Mirrors ``class_log_prior_`` for interpreting MultinomialNB
+        Mirrors ``class_log_prior_`` for interpreting MultinomialNBSS
         as a linear model.
 
     feature_log_prob_ : array, shape (n_classes, n_features)
@@ -66,7 +75,7 @@ class MultinomialNBSS(_BaseDiscreteNB):
         given a class, ``P(x_i|y)``.
 
     coef_ : array, shape (n_classes, n_features)
-        Mirrors ``feature_log_prob_`` for interpreting MultinomialNB
+        Mirrors ``feature_log_prob_`` for interpreting MultinomialNBSS
         as a linear model.
 
     class_count_ : array, shape (n_classes,)
@@ -83,10 +92,10 @@ class MultinomialNBSS(_BaseDiscreteNB):
     >>> import numpy as np
     >>> X = np.random.randint(5, size=(6, 100))
     >>> y = np.array([1, 2, 3, 4, 5, 6])
-    >>> from sklearn.naive_bayes import MultinomialNB
-    >>> clf = MultinomialNB()
+    >>> from semi_supervised_naive_bayes import MultinomialNBSS
+    >>> clf = MultinomialNBSS()
     >>> clf.fit(X, y)
-    MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
+    MultinomialNBSS(alpha=1.0, class_prior=None, fit_prior=True)
     >>> print(clf.predict(X[2:3]))
     [3]
 
@@ -102,35 +111,35 @@ class MultinomialNBSS(_BaseDiscreteNB):
     Information Retrieval. Cambridge University Press, pp. 234-265.
     https://nlp.stanford.edu/IR-book/html/htmledition/naive-bayes-text-classification-1.html
 
-    K. Nigam, A.K. McCallum, S. Thrun, T. Mitchell (2000). Text classification 
-    from labeled and unlabeled documents using EM. Machine learning 39(2-3), 
+    K. Nigam, A.K. McCallum, S. Thrun, T. Mitchell (2000). Text classification
+    from labeled and unlabeled documents using EM. Machine learning 39(2-3),
     pp. 103-134.
     """
 
     def __init__(self, alpha=1.0, beta=1.0, fit_prior=True, class_prior=None,
-                 tol=1e-3, max_iter=3, verbose=True):
-        self.alpha = alpha 
-        self.beta = beta       
+                 tol=1e-3, max_iter=20, verbose=True):
+        self.alpha = alpha
+        self.beta = beta
         self.fit_prior = fit_prior
         self.class_prior = class_prior
         self.tol = tol
         self.max_iter = max_iter
         self.verbose = verbose
-            
+
     def _count(self, X, Y, U_X=np.array([]), U_prob=np.array([])):
         """Count and smooth feature occurrences."""
         if np.any((X.data if issparse(X) else X) < 0):
             raise ValueError("Input X must be non-negative")
-        
+
         self.feature_count_ = safe_sparse_dot(Y.T, X)
         self.class_count_ = Y.sum(axis=0)
-        
+
         if U_X.shape[0] > 0:
             self.feature_count_ += self.beta*safe_sparse_dot(U_prob.T, U_X)
             self.class_count_ += self.beta*U_prob.sum(axis=0)
         else:
             self.feature_count_ = safe_sparse_dot(Y.T, X)
-            self.class_count_ = Y.sum(axis=0)            
+            self.class_count_ = Y.sum(axis=0)
 
     def _update_feature_log_prob(self, alpha):
         """Apply smoothing to raw counts and recompute log probabilities"""
@@ -149,9 +158,9 @@ class MultinomialNBSS(_BaseDiscreteNB):
                 self.class_log_prior_)
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
-        """A semi-supervised version of this method has not been implemented.        
+        """A semi-supervised version of this method has not been implemented.
         """
-        
+
     def fit(self, X, y, sample_weight=None):
         """Fit semi-supervised Naive Bayes classifier according to X, y
 
@@ -192,15 +201,15 @@ class MultinomialNBSS(_BaseDiscreteNB):
             Y *= check_array(sample_weight).T
 
         class_prior = self.class_prior
-        
+
         # Count raw events from data before updating the class log prior
         # and feature log probas
         n_effective_classes = Y.shape[1]
-        
+
         alpha = self._check_alpha()
         self._count(X[labeled], Y)
 
-       
+
         self._update_feature_log_prob(alpha)
         self._update_class_log_prior(class_prior=class_prior)
         jll = self._joint_log_likelihood(X)
@@ -209,11 +218,11 @@ class MultinomialNBSS(_BaseDiscreteNB):
         # Run EM algorithm
         if len(unlabeled) > 0:
             self.num_iter = 0
-            pred = self.predict(X)            
+            pred = self.predict(X)
             while self.num_iter < self.max_iter:
                 self.num_iter += 1
                 prev_sum_jll = sum_jll
-                
+
                 # First, the E-step:
                 prob = self.predict_proba(X[unlabeled])
 
@@ -223,7 +232,7 @@ class MultinomialNBSS(_BaseDiscreteNB):
                 self._update_class_log_prior(class_prior=class_prior)
 
                 jll = self._joint_log_likelihood(X)
-                sum_jll = jll.sum()                
+                sum_jll = jll.sum()
                 if self.verbose:
                     print(
                         'Step {}: jll = {:f}'.format(self.num_iter, sum_jll)
@@ -238,5 +247,5 @@ class MultinomialNBSS(_BaseDiscreteNB):
                     'iteration'.format(self.num_iter)
                     + 's.' if self.num_iter > 1 else '.'
                 )
-                
-        return self      
+
+        return self
