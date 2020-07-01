@@ -3,7 +3,7 @@
 # Naive Bayes described in Section 5.3.1 of the following paper:
 
 # K. Nigam, A.K. McCallum, S. Thrun, T. Mitchell (2000). Text classification
-# from labeled and unlabeled documents using EM. Machine learning 39(2-3),
+# from labeled and unlabeled documents using EM. Machine Learning 39(2-3),
 # pp. 103-134.
 
 #
@@ -112,7 +112,7 @@ class MultinomialNBSS(_BaseDiscreteNB):
     https://nlp.stanford.edu/IR-book/html/htmledition/naive-bayes-text-classification-1.html
 
     K. Nigam, A.K. McCallum, S. Thrun, T. Mitchell (2000). Text classification
-    from labeled and unlabeled documents using EM. Machine learning 39(2-3),
+    from labeled and unlabeled documents using EM. Machine Learning 39(2-3),
     pp. 103-134.
     """
 
