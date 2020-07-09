@@ -42,7 +42,7 @@ class MultinomialNBSS(_BaseDiscreteNB):
 
     beta : float, optional (default=1.0)
         Weight applied to the contribution of the unlabeled data
-        (0 for no contribution)
+        (0 for no contribution).
 
     fit_prior : boolean, optional (default=True)
         Whether to learn class prior probabilities or not.
@@ -59,7 +59,7 @@ class MultinomialNBSS(_BaseDiscreteNB):
         Maximum number of iterations for EM algorithm.
 
     verbose : boolean, optional (default=True)
-        Whether to ouput updates during the running of the EM algorithm.
+        Whether to output updates during the running of the EM algorithm.
 
     Attributes
     ----------
