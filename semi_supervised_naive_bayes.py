@@ -242,10 +242,11 @@ class MultinomialNBSS(_BaseDiscreteNB):
                     break
 
             if self.verbose:
+                end_text = 's.' if self.num_iter > 1 else '.'
                 print(
                     'Optimization converged after {} '
                     'iteration'.format(self.num_iter)
-                    + 's.' if self.num_iter > 1 else '.'
+                    + end_text
                 )
 
         return self
